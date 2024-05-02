@@ -30,3 +30,13 @@
 *.exe
 *.out
 *.app
+/.vs/CodingTestCPP
+/Solved/x64/Debug
+/CodingTestCPP/CodingTestCPP.vcxproj.user
+/CodingTestCPP/CodingTestCPP.vcxproj.filters
+/CodingTestCPP/CodingTestCPP.vcxproj
+/CodingTestCPP/main.cpp
+/Solved
+/Soved
+/x64/Debug
+/CodingTestCPP.sln
