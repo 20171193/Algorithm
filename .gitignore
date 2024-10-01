@@ -43,3 +43,5 @@
 /.vs/ProjectEvaluation
 /CodingTestCsharp/bin/Debug/net8.0
 /CodingTestCsharp/obj
+/CodingTestCsharp/CodingTestCsharp.csproj
+/CodingTestCsharp/Program.cs
