@@ -20,7 +20,8 @@ namespace 백준7576번_토마토
 
         static int solution(int m, int n, int[,] box)
         {
-            int answer = -1;
+            int tmtCount = 0;
+            int dayCount = 0;
             Pos[] dir =
                 {
                 new Pos(1,0),
@@ -40,23 +41,29 @@ namespace 백준7576번_토마토
                 }
             }
 
+            tmtCount = q.Count;
+
             while (q.Count > 0)
             {
                 Pos cur = q.Dequeue();
+                tmtCount--;
                 for (int i = 0; i < 4; i++)
                 {
                     Pos next = cur + dir[i];
                     if (next.x < 0 || next.x >= m) continue;
                     if (next.y < 0 || next.y >= n) continue;
-                    if (box[next.y, next.x] == -1) continue;
-                    if (box[next.y, next.x] > 0)
-                    {
-                        box[next.y, next.x] = Math.Min(box[next.y, next.x], box[cur.y, cur.x] + 1);
-                        continue;
-                    }
-                    box[next.y, next.x] = box[cur.y, cur.x] + 1;
+                    if (box[next.y, next.x] != 0) continue;
+
+                    box[next.y, next.x] = 1;
                     q.Enqueue(next);
                 }
+
+                if (tmtCount == 0)
+                {
+                    dayCount++;
+                    tmtCount = q.Count;
+                }
+
             }
             for (int y = 0; y < n; y++)
             {
@@ -64,12 +71,10 @@ namespace 백준7576번_토마토
                 {
                     if (box[y, x] == 0)
                         return -1;
-
-                    answer = Math.Max(answer, box[y, x]);
                 }
             }
 
-            return answer - 1;
+            return dayCount - 1;
         }
 
         static void Main(string[] args)
