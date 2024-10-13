@@ -74,7 +74,7 @@ class Program
         int t = int.Parse(Console.ReadLine());
         while (t-- > 0)
         {
-            string[] mnk = Console.ReadLine().Split();
+            string[] mnk = Console.ReadLine().Split(" ");
             int m = int.Parse(mnk[0]);
             int n = int.Parse(mnk[1]);
             int k = int.Parse(mnk[2]);
