@@ -5,7 +5,7 @@ namespace 백준9095번_123더하기
 {
     class Program
     {
-        static Func<int, int>[] oper = new Func<int, int>[]
+        static Func<int, int>[] oper = new Func<int, int>[3]
         {
             (value) => value+1,
             (value) => value+2,
