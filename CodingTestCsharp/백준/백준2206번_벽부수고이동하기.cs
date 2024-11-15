@@ -44,6 +44,13 @@ namespace 백준2206번_벽_부수고_이동하기
             while (q.Count > 0)
             {
                 Path cur = q.Dequeue();
+
+                if (cur.pos.y == n - 1 && cur.pos.x == m - 1)
+                {
+                    ret = Math.Min(visited[cur.pos.y, cur.pos.x, cur.isUsed], ret);
+                    continue;
+                }
+
                 for (int i = 0; i < 4; i++)
                 {
                     Pos next = cur.pos + dir[i];
@@ -51,14 +58,6 @@ namespace 백준2206번_벽_부수고_이동하기
                     // 범위 체크
                     if (next.x < 0 || next.x >= m || next.y < 0 || next.y >= n)
                         continue;
-
-                    // 목적지 발견
-                    if (next.x == m - 1 && next.y == n - 1)
-                    {
-                        ret = Math.Min(visited[cur.pos.y, cur.pos.x, cur.isUsed] + 1, ret);
-                        continue;
-                    }
-
                     // 벽 확인
                     if (arr[next.y, next.x] == 1)
                     {
