@@ -6,7 +6,6 @@
 using namespace std;
 
 int n, ret = 987654321, arr[21][21];
-
 int CalcAblity(const vector<int>& t)
 {
 	int abil = 0;
