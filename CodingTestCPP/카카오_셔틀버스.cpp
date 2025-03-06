@@ -23,12 +23,12 @@ string solution(int n, int t, int m, vector<string> timetable) {
     sort(timetable.begin(), timetable.end(), comp);
 
     int reps = 0, remainSit = 0, crueIdx = 0;
-    int curTime = Convert("09:00");
+    int startTime = Convert("09:00");
     int maxTime = -1;
 
     while (n > reps)
     {
-        curTime += reps * t;
+        int curTime = startTime + reps * t;
         remainSit = m;
 
         for (crueIdx; crueIdx < timetable.size(); crueIdx++)
@@ -43,7 +43,9 @@ string solution(int n, int t, int m, vector<string> timetable) {
             remainSit--;
         }
 
-        if (remainSit > 0)
+        if (remainSit == 0)
+            maxTime = Convert(timetable[crueIdx - 1]) - 1;
+        else
             maxTime = curTime;
 
         reps++;
@@ -51,6 +53,8 @@ string solution(int n, int t, int m, vector<string> timetable) {
 
     if (maxTime == -1)
         maxTime = Convert(timetable.front()) - 1;
+
+    cout << maxTime << '\n';
 
     string hour = to_string(maxTime / 60);
     if (hour.size() < 2)
@@ -63,11 +67,4 @@ string solution(int n, int t, int m, vector<string> timetable) {
     answer = hour + ":" + min;
 
     return answer;
-}
-
-int main()
-{
-    solution(2, 10, 2, { "09:00", "09:00", "09:00", "09:00" });
-
-    return 0;
 }
