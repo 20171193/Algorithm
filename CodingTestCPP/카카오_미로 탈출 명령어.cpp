@@ -19,7 +19,7 @@ int GetManhattan(int x1, int y1, int x2, int y2)
 void dfs(int n, int m, int x, int y, int r, int c, int k, string path, string& answer)
 {
     if (flag)
-        return;
+        return;       
 
     if (k == 0)
     {
