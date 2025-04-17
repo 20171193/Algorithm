@@ -19,16 +19,15 @@ public:
 		if (pa == pb)
 			return;
 
-		if (ranks[pa] == ranks[pb] || ranks[pa] > ranks[pb])
+		if (ranks[pa] == ranks[pb])
 		{
 			roots[pb] = pa;
-			ranks[pa] += ranks[pb];
+			ranks[pa]++;
 		}
+		else if( ranks[pa] > ranks[pb])
+			roots[pb] = pa;
 		else // ranks[pa] < ranks[pb]
-		{
 			roots[pa] = pb;
-			ranks[pb] += ranks[pa];
-		}
 	}
 	int Find(int a, vector<int>& roots)
 	{
