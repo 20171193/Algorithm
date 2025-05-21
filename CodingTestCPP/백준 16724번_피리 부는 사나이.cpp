@@ -3,26 +3,36 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <stack>
 using namespace std;
 
+enum Mark {
+	SAFEZONE = -1,
+	UNVISITED = 0,
+	VISITED = 1
+};
+
 int n, m;
-bool visited[1001][1001];
+int visited[1001][1001];
 string dir[1001];
 
 int GetSafeZoneCount()
 {
 	int ret = 0;
 
+	stack<pair<int, int>> path;
 	for (int y = 0; y < n; y++)
 	{
 		for (int x = 0; x < m; x++)
 		{
-			if (visited[y][x]) continue;
+			if (visited[y][x] == SAFEZONE) continue;
 
+			// 탐색
 			int ny = y, nx = x;
-			while (!visited[ny][nx])
+			while (visited[ny][nx] == UNVISITED)
 			{
-				visited[ny][nx] = true;
+				visited[ny][nx] = VISITED;
+				path.push({ ny, nx });
 
 				switch (dir[ny][nx])
 				{
@@ -34,7 +44,16 @@ int GetSafeZoneCount()
 				}
 			}
 
-			ret++;
+			// 현재 경로의 사이클인지
+			if (visited[ny][nx] == VISITED)
+				ret++;
+
+			// 경로정리
+			while (!path.empty())
+			{
+				visited[path.top().first][path.top().second] = SAFEZONE;
+				path.pop();
+			}
 		}
 	}
 	return ret;
@@ -50,5 +69,6 @@ int main()
 		cin >> dir[i];
 
 	cout << GetSafeZoneCount() << '\n';
+
 	return 0;
 }
