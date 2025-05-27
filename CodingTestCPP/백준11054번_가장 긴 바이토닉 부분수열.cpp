@@ -25,9 +25,10 @@ int GetLISCount(int start, int end, bool greater = true)
 
 int solve()
 {
-	int result = 0;
+	// 최소 한개
+	int result = 1;
 
-	for (int i = 1; i < n - 1; i++)
+	for (int i = 0; i < n; i++)
 	{
 		int lc = GetLISCount(0, i);
 		int rc = GetLISCount(i, n - 1, false);
