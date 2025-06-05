@@ -17,7 +17,7 @@ bool BFS(int n, const vector<vector<int>>& graph, vector<int>& before, vector<in
     if (before[0] != -1) return false;
 
     q.push(0);
-    visited[0];
+    visited[0] = true;
     while (!q.empty())
     {
         int cur = q.front();
