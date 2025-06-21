@@ -6,67 +6,32 @@ using namespace std;
 // 1 <= n <= 20
 // 1 <= c <= 1000
 
-const int LIMIT_COST = 2001; // 제한선 이상 비용
+// 배낭문제 풀이
+const int INF_COST = 200001, INF_PEOPLE = 1101;
+int n, c, costPerPeople[INF_PEOPLE];
 
-int n, c, costPerPeople[1001];
 pair<int, int> inputs[21];
-
-bool cmp(const pair<int, int>& a, const pair<int, int>& b)
-{
-	return a.first > b.first;
-}
-
-int FindCost(int targetPeople)
-{
-	if (targetPeople <= 0)
-		return 0;
-
-	for (int pep = targetPeople; pep >= 0; pep--)
-	{
-		if (costPerPeople[pep] != LIMIT_COST)
-			return costPerPeople[pep] + FindCost(targetPeople - pep);
-	}
-}
 
 int solve()
 {
-	// 비용 기준 내림차 정렬
-	sort(inputs, inputs + n, cmp);
-	fill(costPerPeople, costPerPeople + c + 1, LIMIT_COST);
+	int answer = INF_COST;
+	fill(costPerPeople, costPerPeople + INF_PEOPLE, INF_COST);
 
-	// 최적의 비용으로 포맷
+	costPerPeople[0] = 0;
 	for (int i = 0; i < n; i++)
 	{
 		int cost = inputs[i].first;
 		int pep = inputs[i].second;
 
-		int curCost = 0, curPep = 0;
-		bool checkFlag = false;
-		for (int j = pep; j <= c; j++)
+		for (int j = pep; j < INF_PEOPLE; j++)
 		{
-			if (j % pep == 0)
-			{
-				checkFlag = true;
-				curCost += cost;
-				curPep += pep;
-			}
-
-			if (costPerPeople[j] <= curCost)
-				break;
-			else if (checkFlag)
-			{
-				costPerPeople[j] = curCost;
-				checkFlag = false;
-			}
+			costPerPeople[j] = min(costPerPeople[j], costPerPeople[j - pep] + cost);
+			if (j >= c && costPerPeople[j] < answer)
+				answer = costPerPeople[j];
 		}
 	}
 
-	for (int i = 1; i <= c; i++)
-		cout << i << " : " << costPerPeople[i] << '\n';
-
-	// To-do 배낭 문제
-
-	return FindCost(c);
+	return answer;
 }
 
 int main()
