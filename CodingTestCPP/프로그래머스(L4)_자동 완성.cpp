@@ -3,12 +3,13 @@
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
+#include <memory>
 using namespace std;
 
 // 사전 순 트리 형태로 구성
 struct Node
 {
-    unordered_map<char, Node*> children;
+    unordered_map<char, unique_ptr<Node>> children;
     int count = 0;
     bool isEnd = false;
 };
@@ -22,11 +23,11 @@ void Insert(const string& word, Node* root)
         auto it = children.find(c);
         if (it == children.end())
         {
-            auto result = children.insert({ c, new Node() });
+            auto result = children.insert({ c, make_unique<Node>() });
             it = result.first;
         }
 
-        cur = (*it).second;
+        cur = (*it).second.get();
         cur->count++;
     }
     cur->isEnd = true;
@@ -48,7 +49,7 @@ int solution(vector<string> words) {
 
         for (char c : w)
         {
-            cur = cur->children[c];
+            cur = cur->children[c].get();
             cnt++;
 
             if (cur->count == 1)
@@ -58,5 +59,6 @@ int solution(vector<string> words) {
         answer += cnt;
     }
 
+    delete root;
     return answer;
 }
