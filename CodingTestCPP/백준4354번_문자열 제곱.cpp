@@ -10,29 +10,23 @@ using namespace std;
 int solution(const string& str)
 {
 	int result = 1;
-
 	int size = str.size();
-	for (int len = 1; len <= size / 2; len++)
+	vector<int> pl(size, 0);	// kmp(pattern length)
+	for (int j = 0, i = 1; i < size; i++)
 	{
-		if (size % len != 0)
-			continue;
+		while (j > 0 && str[i] != str[j])
+			j = pl[j - 1];
 
-		string pattern = str.substr(0, len);
-		bool isSuccess = true;
-		for (int j = len; j <= size - len; j += len)
-		{
-			if (pattern != str.substr(j, len))
-			{
-				isSuccess = false;
-				break;
-			}
-		}
-
-		if (isSuccess)
-			result = max(result, size / len);
+		if (str[i] == str[j])
+			pl[i] = ++j;
 	}
 
-	return result;
+	int patternLength = size - pl[size - 1];
+
+	if (size % patternLength == 0)
+		return size / patternLength;
+	else
+		return 1;
 }
 
 int main()
