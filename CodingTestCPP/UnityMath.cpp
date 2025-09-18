@@ -32,7 +32,20 @@ static struct Vector3
 	Vector3 operator/(float f) const { return Vector3(_x / f, _y / f, _z / f); }
 };
 
-class Geometry
-{
 
+static class Geometry
+{
+	float Dot(const Vector3& a, const Vector3& b) const 
+	{
+		return a._x * b._x + a._y * b._y + a._z * b._z;
+	}
+	Vector3 Cross(const Vector3& a, const Vector3& b) const 
+	{
+		return Vector3(
+			a._y * b._z - a._z * b._y,
+			a._z * b._x - a._x * b._z,
+			a._x * b._y - a._y * b._x
+		);
+	}
+	// TODO : 2D 외적/내적 (스칼라)
 };
