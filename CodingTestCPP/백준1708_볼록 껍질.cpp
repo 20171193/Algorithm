@@ -12,10 +12,7 @@
 using namespace std;
 
 typedef long long ll;
-constexpr ll MAX_RANGE = 40001;
-
 int n;
-pair<ll, ll> basePos = { MAX_RANGE, MAX_RANGE };
 
 ll Cross(const pair<ll, ll>& a, const pair<ll, ll>& b)
 {
@@ -29,26 +26,40 @@ pair<ll, ll> TowardVector(const pair<ll, ll>& from, const pair<ll, ll>& to)
 {
 	return { to.first - from.first, to.second - from.second };
 }
-bool comp(const pair<ll, ll>& a, const pair<ll, ll>& b)
-{
-	pair<ll, ll> da = TowardVector(basePos, a);
-	pair<ll, ll> db = TowardVector(basePos, b);
-	ll cross = Cross(da, db);
 
-	if (cross == 0)
-		return sqrMagnitude(da) < sqrMagnitude(db);
-	return cross > 0;
-}
 int solution(vector<pair<ll, ll>>& vec)
 {
+	// y좌표값 정렬
+	sort(vec.begin(), vec.end()
+		, [](const pair<ll, ll>& a, const pair<ll, ll>& b)
+		{
+			if (a.second == b.second)
+				return a.first < b.first;
+			return a.second < b.second;
+		});
+
+	auto const& basePos = vec[0];
 	// 기준점 각 정렬
-	sort(vec.begin(), vec.end(), comp);
+	sort(vec.begin() + 1, vec.end(),
+		[basePos](const pair<ll, ll>& a, const pair<ll, ll>& b)
+		{
+			pair<ll, ll> da = TowardVector(basePos, a);
+			pair<ll, ll> db = TowardVector(basePos, b);
+			ll cross = Cross(da, db);
+
+			// 직선 상 : 크기 비교
+			if (cross == 0)
+				return sqrMagnitude(da) < sqrMagnitude(db);
+
+			// 각도 비교
+			return cross > 0;
+		});
 
 	// 그라함 스캔 알고리즘
 	vector<pair<ll, ll>> hull;
-	hull.push_back(basePos);
 	hull.push_back(vec[0]);
-	for (int i = 1; i < vec.size(); i++)
+	hull.push_back(vec[1]);
+	for (int i = 2; i < vec.size(); i++)
 	{
 		while (hull.size() >= 2)
 		{
@@ -64,6 +75,8 @@ int solution(vector<pair<ll, ll>>& vec)
 		hull.push_back(vec[i]);
 	}
 
+
+
 	return hull.size();
 }
 int main()
@@ -72,21 +85,15 @@ int main()
 	cin.tie(NULL);
 
 	cin >> n;
-	vector<pair<ll, ll>> vec;
-
-	for (int i = 0; i < n; i++)
+	if (n == 3)
 	{
-		ll x, y;
-		cin >> x >> y;
-		if (y < basePos.second)
-		{
-			if (basePos.first != MAX_RANGE)
-				vec.push_back({ x, y });
-			basePos = { x,y };
-		}
-		else
-			vec.push_back({ x,y });
+		cout << n << '\n';
+		return 0;
 	}
+
+	vector<pair<ll, ll>> vec(n);
+	for (int i = 0; i < n; i++)
+		cin >> vec[i].first >> vec[i].second;
 
 	std::cout << solution(vec) << '\n';
 	return 0;
