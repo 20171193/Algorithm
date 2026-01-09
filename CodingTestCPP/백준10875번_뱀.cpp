@@ -6,7 +6,12 @@
 // 
 // 풀이
 // 1. 배열 방문체크는 불가 
-// 2. 한번 회전할 때마다 dir * time의 벡 생성
+// 2. 각 입력마다 하나의 직선 생성
+//
+// 시도 
+// 1. 실패 요인 : 마지막 방향 처리
+// 2. 실패 요인 : 직선 경로 상에 두 개 이상의 직선이 존재하는 경우
+//     - 수정 : 교점까지의 거리가 가장 짧은 직선에서 탈출 (성공)
 #include <iostream>
 #include <climits>
 #include <algorithm>
@@ -28,11 +33,15 @@ struct Segment {
 	ll y1, x1, y2, x2;
 	Segment() : y1(0), x1(0), y2(0), x2(0) {}
 	Segment(ll y1, ll x1, ll y2, ll x2) : y1(y1), x1(x1), y2(y2), x2(x2) {}
+	Segment(pair<ll, ll> p1, pair<ll, ll> p2) : y1(p1.first), x1(p1.second), y2(p2.first), x2(p2.second) {}
 	bool isHorizontal() const {
 		return y1 == y2;
 	}
 	bool isVertical() const {
 		return x1 == x2;
+	}
+	ll GetLength() const {
+		return abs(y2 - y1) + abs(x2 - x1);
 	}
 	pair<ll, ll> GetIntersection(const Segment& other) const {
 		pair<ll, ll> intersection = { LLONG_MAX, LLONG_MAX };
@@ -54,11 +63,9 @@ struct Segment {
 				ll left = min(x1, x2);
 				ll right = max(x1, x2);
 				// 좌측 방향 이동에서 접한 경우
-				if (other.x1 <= right)
-					intersection = { y1, right };
+				if (other.x1 > other.x2 && right < other.x1 && other.x2 <= right) intersection = { y1, right };
 				// 우측 방향 이동에서 접한 경우
-				if (other.x2 >= left)
-					intersection = { y1, left };
+				else if (other.x1 < other.x2 && left <= other.x2 && other.x1 < left) intersection = { y1, left };
 			}
 		}
 		// 세로-세로
@@ -67,11 +74,9 @@ struct Segment {
 				ll top = min(y1, y2);
 				ll bottom = max(y1, y2);
 				// 아랫 방향 이동에서 접한 경우
-				if (other.y2 >= top)
-					intersection = { top, x1 };
+				if (other.y1 > other.y2 && top < other.y1 && other.y2 <= top) intersection = { top, x1 };
 				// 윗 방향 이동에서 접한 경우
-				if (other.y1 <= bottom)
-					intersection = { bottom, x1 };
+				else if (other.y1 < other.y2 && bottom <= other.y2 && other.y1 < bottom) intersection = { bottom, x1 };
 			}
 		}
 
@@ -87,7 +92,7 @@ Segment Move(const pair<ll, char>& input) {
 	Segment seg(curPos.first, curPos.second, nextPos.first, nextPos.second);
 
 	// 방향 전환 및 시간 누적
-	dir = input.second == 'L' ? (dir == 0 ? 3 : dir - 1) : (dir == 3 ? 0 : dir + 1);
+	dir = (input.second == 'L' ? (dir + 3) : (dir + 1)) % 4;
 	curTime += input.first;
 	curPos = nextPos;
 
@@ -95,29 +100,62 @@ Segment Move(const pair<ll, char>& input) {
 }
 
 ll solution() {
-	// 4모퉁이 추가
-	int totalSegments = n + 4;
-	vector<Segment> segments(totalSegments);
-	segments[0] = Segment(l, -l, l, l), segments[1] = Segment(l, -l, -l, -l);
-	segments[2] = Segment(l, l, -l, l), segments[3] = Segment(-l, -l, -l, l);
+	// 경계면 직선(4) + 마지막 선분
+	int totalSegments = n + 4 + 1;
+
+	// 경계 모서리 할당
+	ll boundary = l + 1;
+	vector<Segment> segments = {
+		Segment(boundary, -boundary, boundary, boundary),
+		Segment(boundary, -boundary, -boundary, -boundary),
+		Segment(boundary, boundary, -boundary, boundary),
+		Segment(-boundary, -boundary, -boundary, boundary)
+	};
 
 	pair<ll, ll> notIntersectFlag = { LLONG_MAX, LLONG_MAX };
 
 	for (int i = 4; i < totalSegments; i++) {
+		Segment segment;
 		// 이동 및 직선 생성
-		segments[i] = Move(inputs[i - 4]);
+		if (i < totalSegments - 1)
+			segment = Move(inputs[i - 4]);
+		// (i == totalSegments-1) 마지막 방향 할당 
+		else {
+			pair<ll, ll> nextPos = dx[dir] == 0
+				? make_pair(dy[dir] * boundary, curPos.second)
+				: make_pair(curPos.first, dx[dir] * boundary);
 
+			segment = Segment(curPos, nextPos);
+
+			curTime += segment.GetLength();
+			curPos = nextPos;
+		}
+
+		bool intersectFlag = false;
+		ll maxDistance = 0;
 		for (int j = 0; j < i; j++) {
-			pair<ll, ll> intersection = segments[j].GetIntersection(segments[i]);
+			// 바로 꺾인 선, 평행한 선 제외
+			if (i > 4 && j == i - 1 || i > 5 && j == i - 2) continue;
+
+			pair<ll, ll> intersection = segments[j].GetIntersection(segment);
 			if (intersection == notIntersectFlag) continue;
 
-			// 겹치는 구간 만큼 현재 시간에서 빼기 (통과한 경우) 
-			ll overlapDistance = abs(segments[i].y1 - intersection.first)
-				+ abs(segments[i].x1 - intersection.second);
+			// 통과한 구간 만큼 현재 시간에서 빼기 (통과한 경우) 
+			ll overDistance = abs(segment.y2 - intersection.first)
+				+ abs(segment.x2 - intersection.second);
+			// 수정 : 통과한 구간이 가장 긴(시작 지점에서 가장 가까운)것만 선택 
+			maxDistance = max(maxDistance, overDistance);
 
-			return curTime - overlapDistance;
+			intersectFlag = true;
 		}
+
+		// 최종 시간에서 통과한 길이(통과 후 지나간 시간)만큼 -
+		if (intersectFlag)
+			return curTime - maxDistance;
+
+		segments.push_back(segment);
 	}
+
 	return curTime;
 }
 
