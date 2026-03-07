@@ -11,47 +11,96 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
 using namespace std;
 
-int l, h[5], w[5], pieces[5][11], selected[5];
-
-struct Placement {
-	int row[11] = {};
+struct Piece {
+	int h, w, cnt;
+	int row[10] = {};
 };
 
-// 각 조각별 배치도
-vector<Placement> placements[5];
+int l;
+Piece pieces[5];
 
-bool placeable(const int* pieceRow, const int* board) {
-	for (int r = 0; r < l; r++) {
-		if (board[r] & pieceRow[r])
+// r,c 칸에 조각 삽입 가능여부
+bool placeable(int r, int c, int pi, const int* placed) {
+	for (int cr = 0; cr < pieces[pi].h; cr++) {
+		if (placed[r + cr] & (pieces[pi].row[cr] << c))
 			return false;
 	}
 	return true;
 }
 
-bool solution(int used, int placed[11]) {
-	if (used == (1 << 5) - 1) return true;
+// 가장 가까운 빈칸 찾기
+bool findEmpty(const int* placed, int& sr, int& sc) {
+	for (int r = 0; r < l; r++) {
+		for (int c = 0; c < l; c++) {
+			if ((placed[r] & (1 << c)) == 0) {
+				sr = r;
+				sc = c;
+				return true;
+			}
+		}
+	}
+	return false;
+}
 
+// 조각 인덱스 할당
+void place(int r, int c, int pi, string& answer) {
+	for (int cr = 0; cr < pieces[pi].h; cr++) {
+		int rowBit = (pieces[pi].row[cr] << c);
+
+		for (int cc = 0; cc < l; cc++) {
+			if (rowBit & (1 << cc))
+				answer[cc + (r + cr) * (l + 1)] = pi + '1'; // 인덱스 0-based
+		}
+	}
+}
+
+bool dfs(int used, int placed[10], string& answer) {
+	int sr, sc;
+	if (!findEmpty(placed, sr, sc)) return true;
 
 	for (int i = 0; i < 5; i++) {
 		if (used & (1 << i)) continue;
 
-		for (int j = 0; j < placements[i].size(); j++) {
-			if (!placeable(placements[i][j].row, placed)) continue;	// 비트 중복 확인
+		for (int pr = 0; pr < pieces[i].h; pr++) {
+			for (int pc = 0; pc < pieces[i].w; pc++) {
+				if ((pieces[i].row[pr] & (1 << pc)) == 0) continue;
 
-			// 방문 체크
-			for (int r = 0; r < l; r++) placed[r] |= placements[i][j].row[r];
+				int r = sr - pr;
+				int c = sc - pc;
 
-			// 조각별 배치도 인덱스 할당
-			selected[i] = j;
-			if (solution(used | (1 << i), placed))  return true;
+				if (r < 0 || r + pieces[i].h > l || c < 0 || c + pieces[i].w > l) continue;
+				if (!placeable(r, c, i, placed)) continue;
 
-			// 원복
-			for (int r = 0; r < l; r++) placed[r] ^= placements[i][j].row[r];
+				// 조각 삽입
+				for (int cr = 0; cr < pieces[i].h; cr++) placed[r + cr] |= (pieces[i].row[cr] << c);
+
+				if (dfs(used | (1 << i), placed, answer)) {
+					place(r, c, i, answer);
+					return true;
+				}
+
+				// 원복
+				for (int cr = 0; cr < pieces[i].h; cr++) placed[r + cr] ^= (pieces[i].row[cr] << c);
+			}
 		}
 	}
+
 	return false;
+}
+
+string solution() {
+	// 출력 버퍼
+	string answer(l * (l + 1), '0');
+	for (int r = 0; r < l; r++) answer[r * (l + 1) + l] = '\n';
+
+	int placed[10] = {};
+	if (!dfs(0, placed, answer))
+		return "gg\n";
+
+	return answer;
 }
 
 int main() {
@@ -60,53 +109,28 @@ int main() {
 
 	cin >> l;
 
-	string temp;
-	int cnt = 0;
+	int totalCnt = 0;
 	for (int i = 0; i < 5; i++) {
-		cin >> h[i] >> w[i];
-		for (int y = 0; y < h[i]; y++) {
+		cin >> pieces[i].h >> pieces[i].w;
+
+		string temp;
+		for (int r = 0; r < pieces[i].h; r++) {
 			cin >> temp;
-			for (int x = 0; x < w[i]; x++) {
-				if (temp[x] == '#') {
-					pieces[i][y] |= (1 << x);	// 원본 조각 할당
-					cnt++;
+			for (int c = 0; c < pieces[i].w; c++) {
+				if (temp[c] == '#') {
+					pieces[i].row[r] |= (1 << c);
+					pieces[i].cnt++;
+					totalCnt++;
 				}
 			}
 		}
 	}
 
-	// 조각 개수와 보드 크기가 맞지 않은 경우
-	if (cnt != l * l) {
+	if (totalCnt != l * l) {
 		cout << "gg" << '\n';
 		return 0;
 	}
 
-	// 조각별 배치도 할당(보드내 모든 위치)
-	for (int i = 0; i < 5; i++) {
-		for (int dy = 0; dy <= l - h[i]; dy++) {
-			for (int dx = 0; dx <= l - w[i]; dx++) {
-				Placement p;
-				for (int r = 0; r < h[i]; r++)
-					p.row[dy + r] = (pieces[i][r] << dx);
-				placements[i].push_back(p);
-			}
-		}
-	}
-
-	int placed[11] = {};
-	if (solution(0, placed)) {
-		// 출력 버퍼 생성
-		string answer(l * (l + 1), '\n');
-		for (int i = 0; i < 5; i++) {
-			const auto& p = placements[i][selected[i]];
-			for (int r = 0; r < l; r++)
-				for (int c = 0; c < l; c++)
-					if (p.row[r] & (1 << c))
-						answer[r * (l + 1) + c] = i + '1';
-		}
-		cout << answer;
-	}
-	else
-		cout << "gg" << '\n';
+	cout << solution();
 	return 0;
 }
