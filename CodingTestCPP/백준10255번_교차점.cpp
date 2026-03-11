@@ -37,10 +37,19 @@ ll Cross(const Segment& seg, int px, int py) {
 	return (ll)(seg.x2 - seg.x1) * (py - seg.y1) - (ll)(seg.y2 - seg.y1) * (px - seg.x1);
 }
 
+
+
+
 // 4, 7
 int solution(const Rectangle& rect, const Segment& seg) {
 	// 교점좌표 할당
 	set<pair<ld, ld>> intersection;
+
+	// 선분의 최소/최대 좌표 미리 캐싱
+	int mnsx = min(seg.x1, seg.x2);
+	int mxsx = max(seg.x1, seg.x2);
+	int mnsy = min(seg.y1, seg.y2);
+	int mxsy = max(seg.y1, seg.y2);
 
 	for (const auto& side : rect.segments) {
 		ll d1 = Cross(side, seg.x1, seg.y1);
@@ -62,8 +71,6 @@ int solution(const Rectangle& rect, const Segment& seg) {
 				// 꼭짓점에서 접하는 경우 or 일부가 포함되는 경우
 				// 무조건 리턴되는 부분 (0 or 1 or INF(4))
 				if (isHorizontal && mny == seg.y1) {
-					int mnsx = min(seg.x1, seg.x2);
-					int mxsx = max(seg.x1, seg.x2);
 					// 선분의 일부가 변에 포함되는 경우
 					if ((mnx < mnsx && mnsx < mxx) || (mnx < mxsx && mxsx < mxx))
 						return mnsx == mxsx ? 1 : INF;	// 주어진 선분이 점인 경우 예외
@@ -78,9 +85,6 @@ int solution(const Rectangle& rect, const Segment& seg) {
 						return 0;
 				}
 				else if (!isHorizontal && mnx == seg.x1) {
-					int mnsy = min(seg.y1, seg.y2);
-					int mxsy = max(seg.y1, seg.y2);
-
 					// 선분의 일부가 변에 포함되는 경우
 					if ((mny < mnsy && mnsy < mxy) || (mny < mxsy && mxsy < mxy))
 						return mnsy == mxsy ? 1 : INF;	// 주어진 선분이 점인 경우 예외
