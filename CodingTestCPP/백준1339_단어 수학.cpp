@@ -6,10 +6,7 @@
 // 
 // 풀이
 // 1. 그리디
-//  1-1. 자릿수별로 단어 분류
-//  1-2. 단어별로 차수 할당 (자릿수)
-//  1-3. 분류된 단어 차수 기준 내림차 정렬
-//  1-4. 높은 자릿수, 높은 차수부터 9~0 치환
+//  1-1. 각 단어별로 자릿수 누적(가중치)
 // 2. 10^8 * 10 -> int 불가 long long 사용
 #include <iostream>
 #include <vector>
@@ -19,42 +16,28 @@
 using namespace std;
 typedef long long ll;
 
-int n, num = 9;
-bool used[27];
-ll degree[27];
+int n;
+ll weight[27];
 string words[10];
 
 ll solution() {
-	vector<vector<int>> digitNum(9);
-
-	// 차수 할당, 자릿수별 문자 할당
+	ll ret = 0;
+	// 문자별 가중치 할당
 	for (int i = 0; i < n; i++) {
-		int digit = 0;
-		for (auto iter = words[i].rbegin(); iter != words[i].rend(); iter++, digit++) {
-			int ascii = (*iter) - 'A';
-
-			degree[ascii] += pow(10, digit);
-			digitNum[digit].push_back(ascii);
+		for (int j = (int)words[i].size() - 1, digit = 1; j >= 0; j--, digit *= 10) {
+			weight[words[i][j] - 'A'] += digit;
 		}
 	}
 
-	// 문자 치환 + 결과 누적
-	ll result = 0;
-	for (auto iter = digitNum.rbegin(); iter != digitNum.rend(); iter++) {
-		if ((*iter).empty()) continue;
+	sort(weight, weight + 27, greater<ll>());
 
-		// 차수 기준 정렬
-		sort((*iter).begin(), (*iter).end(), [](int a, int b) { return degree[a] > degree[b]; });
-
-		for (int ascii : (*iter)) {
-			if (!used[ascii]){
-				result += ascii * degree[ascii];
-				used[ascii] = true;
-			}
-		}
+	// 가중치순으로 9~0 치환, 결과 누적
+	int num = 9;
+	for (int i = 0; i < 27; i++) {
+		if (!weight[i]) break;
+		ret += weight[i] * num--;
 	}
-
-	return result;
+	return ret;
 }
 
 int main() {
