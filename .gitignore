@@ -71,3 +71,9 @@ Program/Program.vcxproj
 Program/main.cpp
 CodingTestCPP/백준/.vscode/tasks.json
 CodingTestCPP/백준/.vscode/launch.json
+CodingTestCPP/Program.vcxproj.user
+.gitignore
+CodingTestCPP/Program.vcxproj
+CodingTestCPP/.vscode/launch.json
+CodingTestCPP/.vscode/tasks.json
+CodingTestCPP/Program.vcxproj.filters
