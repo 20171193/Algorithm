@@ -79,3 +79,5 @@ CodingTestCPP/.vscode/tasks.json
 CodingTestCPP/Program.vcxproj.filters
 /.vs
 /.vscode
+/CPP_2/main.cpp
+/Cpp_02/main.cpp
