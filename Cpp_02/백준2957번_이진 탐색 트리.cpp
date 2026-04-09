@@ -50,14 +50,3 @@ void solution() {
 		s.insert(arr[i]);
 	}
 }
-
-int main() {
-	ios::sync_with_stdio(false);
-	cin.tie(NULL); cout.tie(NULL);
-
-	cin >> n;
-	for (int i = 0; i < n; i++)
-		cin >> arr[i];
-	solution();
-	return 0;
-}

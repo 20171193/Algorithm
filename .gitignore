@@ -80,3 +80,10 @@ CodingTestCPP/Program.vcxproj.filters
 /.vs
 /.vscode
 .aider*
+/Cpp_02/x64/Debug
+/Cpp_02/Cpp_02.vcxproj
+/Cpp_02/Cpp_02.vcxproj.filters
+/AI_Rules
+/Solving/x64/Debug
+/Solving
+/SolvingCsharp
