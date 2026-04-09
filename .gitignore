@@ -87,3 +87,6 @@ CodingTestCPP/Program.vcxproj.filters
 /Solving/x64/Debug
 /Solving
 /SolvingCsharp
+/Csharp_01/.vs
+/Csharp_01/obj
+/Csharp_01/Csharp_01.csproj
