@@ -39,8 +39,8 @@ struct SegmentTree {
 	}
 
 	ll query(int node, int l, int r, int ql, int qr) {
-		if (ql > r || qr < l) return 0;
-		if (l <= ql && qr <= r) return tree[node];
+		if (l > qr || r < ql) return 0;
+		if (ql <= l && r <= qr) return tree[node];
 
 		int mid = (l + r) >> 1;
 		return query(node * 2, l, mid, ql, qr) + query(node * 2 + 1, mid + 1, r, ql, qr);
