@@ -7,7 +7,7 @@
 //  1-4. UNMERGE r c : r, c 셀의 모든 병합 해제, (r,c)만 이전 값을 가짐
 //  1-5. PRINT r c : r, c의 값을 출력 비어있을 경우 "EMPTY" 출력
 // 풀이
-// 1. 병합 노드 관리 : find재귀로 부모찾기
+// 1. 병합 노드 관리 : union-find 재귀로 부모찾기, 노드 병합
 #include <string>
 #include <vector>
 #include <iostream>
@@ -17,7 +17,7 @@ const int MAX_POS = 50;
 
 pair<int,int> find(int r, int c, vector<vector<vector<pair<int, int>>>>& address) {
     if (address[r][c][0] == make_pair(r, c)) return { r,c };
-    else return find(address[r][c][0].first, address[r][c][0].second, address);
+    else return address[r][c][0] = find(address[r][c][0].first, address[r][c][0].second, address);
 }
 
 void update(int r, int c, string value, vector<vector<string>>& table, vector<vector<vector<pair<int, int>>>>& address) {
