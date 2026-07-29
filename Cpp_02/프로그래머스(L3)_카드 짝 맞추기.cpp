@@ -131,20 +131,17 @@ int solution(vector<vector<int>> board, int r, int c) {
 		}
 	}
 
-	vector<int> comb(cardPos.size());
-	for(int i =0; i<comb.size(); i++) comb[i] = i;
-
-	// 카드 순열(인덱스 순으로 처리)
+	// 카드 순열
 	do{
 		int total = 0;
 		pair<int, int> curPos = {r,c};
 		vector<vector<int>> tempBoard = board;
 
-		for(int idx : comb) {
+		for(auto card : cardPos) {
 			// 이동 키 + enter키(2)
-			total += GetDist(curPos, cardPos[idx][0], cardPos[idx][1], tempBoard) + 2;
-			tempBoard[cardPos[idx][0].first][cardPos[idx][0].second] = 0;
-			tempBoard[cardPos[idx][1].first][cardPos[idx][1].second] = 0;
+			total += GetDist(curPos, card[0], card[1], tempBoard) + 2;
+			tempBoard[card[0].first][card[0].second] = 0;
+			tempBoard[card[1].first][card[1].second] = 0;
 		}
 		
 		answer = min(answer, total);
