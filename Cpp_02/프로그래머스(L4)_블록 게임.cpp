@@ -2,119 +2,111 @@
 // 문제
 // 1. 1*1짜리 블록을 '위'에서 떨어뜨려 없앨 수 있는 블록의 최대 개수
 //   : 속이 꽉찬 직사각형을 만들면 없어짐.
-// 풀이
-// 1. 같은 열, 윗 행에 블록이 존재하면 절대 삭제할 수 없는 구조.
-//  1-1. 같은 '열'을 공유하는 블록 간 인접 그래프
-//  1-2. 진입 차수 : 이전 행 블록이 다음 행 블록의 진입 조건
+// 이전 풀이 (실패)
+// 1. 같은 열, 윗 행에 블록이 존재하면 절대 삭제할 수 없는 구조로 보고
+//    같은 '열'을 공유하는 블록 간 인접 그래프 + 진입차수(위상정렬)로 접근.
+// 2. 실패 이유 : 블록 자신의 bounding box 밖에 있는 블록까지도
+//    "같은 열의 가장 가까운 위 블록"이라는 이유로 의존관계로 잡아버림
+//    (자신의 열이 이미 자기 셀로 꽉 차 있어 실제로는 아무 영향 없는 경우에도 간선이 생김)
+// 수정
+// 1. 위상정렬 폐기 -> 브루트포스(라운드 반복) 시뮬레이션으로 변경
+// 2. 블록별로 열 단위 top/bottom을 구해 "채워야 하는 좌표(gap)"를 직접 계산
+//    (GetMissingPos), 그 좌표 바로 위 칸부터 보드 최상단까지 다른 블록이
+//    있는지 확인해서(CanDestroy) 제거 가능 여부 판단
+// 3. 매 라운드마다 제거 가능한 블록들을 한꺼번에 지우고, 더 이상 지울 게
+//    없을 때까지 반복 -> 연쇄 제거를 자연스럽게 반영
+#include <string>
 #include <vector>
 #include <algorithm>
-#include <queue>
 #include <unordered_map>
-#include <iostream>
 using namespace std;
 
-// TODO
-// : 현재 문제에서는 주어지지 않는 형태지만,
-//   다음과 같은 형태에서는 현재 판단으로 불가.
-// : => 더 적절한 방법 고민
-// EX) 000
-//     0 0
+// 채워야하는 좌표 반환 {minRow(topRow), col}
+vector<pair<int, int>> GetMissingPos(const vector<pair<int,int>>& block){
+    int minRow = 51, maxRow = -1;
+    for(auto& p : block){
+        minRow = min(minRow, p.first);
+        maxRow = max(maxRow, p.first);
+    }
 
-bool CanDestroy(vector<pair<int,int>>& block) {
-    sort(block.begin(), block.end(), [](const auto& a, const auto& b){
-        if(a.first == b.first) return a.second < b.second;
-        return a.first > b.first;
-    });
-
-    vector<pair<int,int>> rowRange;
-    int prevRow = -1;
-    int idx = -1;
-    for(auto p : block){
-        if(prevRow != p.first){
-            rowRange.push_back({p.second, p.second});
-            prevRow = p.first;
-            idx++;
-        }
-        else
-            rowRange[idx].second = p.second;
-
-        if(idx > 0){
-            if(!(rowRange[idx-1].first <= rowRange[idx].first 
-                && rowRange[idx].second <= rowRange[idx-1].second))
-                return false;
+    // col -> {topRow, bottomRow}
+    unordered_map<int, pair<int,int>> colRange;
+    for(auto& p : block){
+        int r = p.first, c = p.second;
+        if(colRange.find(c) == colRange.end())
+            colRange[c] = {r, r};
+        else{
+            colRange[c].first = min(colRange[c].first, r);
+            colRange[c].second = max(colRange[c].second, r);
         }
     }
 
+    vector<pair<int, int>> poses;
+    for(auto& kv : colRange){
+        int col = kv.first;
+        int topRow = kv.second.first;
+        int bottomRow = kv.second.second;
+
+        // 위쪽만 존재하는 경우(아래쪽 구멍)
+        if(bottomRow != maxRow) return {{-1,-1}};
+        if(topRow != minRow) poses.push_back({topRow, col});
+    }
+
+    return poses;
+}
+
+// 지울 수 있는지 반환
+// 채워야할 좌표 위(--)로 순회하며 다른 블록이 있다면 false, 없다면 true
+bool CanDestroy(const vector<pair<int,int>>& missingPoses, const vector<vector<int>>& board){
+    for(auto p : missingPoses){
+        for(int row = p.first-1; row >= 0; row--){
+            if(board[row][p.second])
+                return false;
+        }
+    }
     return true;
 }
 
 int solution(vector<vector<int>> board) {
     int answer = 0;
 
-    const int MAX_NODE = 200;
+    // 블록 영역 할당
+    unordered_map<int, vector<pair<int,int>>> blocks;
+
     int n = board.size();
-
-    vector<vector<pair<int,int>>> blocks(MAX_NODE+1);
-
-    // 인접 그래프
-    vector<vector<int>> graph(MAX_NODE + 1);
-    // 간선 할당 여부
-    vector<vector<bool>> linked(MAX_NODE + 1, vector<bool>(MAX_NODE + 1, false));
-    // 노드 별 진입 차수
-    unordered_map<int, int> indegree;
-
-    // 해당 열에 마지막으로 등장했던 블록 수
-    vector<int> colPrevNum(n);
-
     for(int r = 0; r < n; r++){
         for(int c = 0; c < n; c++){
-            if(board[r][c]) {
-                int cur = board[r][c];
-                blocks[cur].push_back(make_pair(r,c));
-
-                int prev = colPrevNum[c];
-                if(!prev && indegree.find(cur) == indegree.end())
-                    indegree[cur] = 0;
-                else if(prev && prev != cur){
-                    if(!linked[prev][cur]) {
-                        indegree[cur]++;
-                        // 단방향 간선 할당
-                        graph[prev].push_back(cur);
-                        linked[prev][cur] = true;
-                        linked[cur][prev] = true;
-                    }
-                }
-                
-                colPrevNum[c] = cur;
-            }   
+            if(board[r][c]) blocks[board[r][c]].push_back({r,c});
         }
     }
 
-    queue<int> q;
-    for(auto iter = indegree.begin(); iter != indegree.end(); iter++){
-        cout << "indegree : " << (*iter).first << " = " << (*iter).second << '\n';
-        
-        if((*iter).second == 0){
-            q.push((*iter).first);
-        }
+    // 정렬 + 빈 좌표 할당
+    unordered_map<int, vector<pair<int,int>>> missingPoses;
+    for(auto& kv : blocks){
+
+        auto poses = GetMissingPos(kv.second);
+        if(!poses.empty() && poses.front().first == -1) continue;
+
+        missingPoses[kv.first] = poses;
     }
-    
-    while(!q.empty()){
-        int cur = q.front();
-        q.pop();
 
-        // 현재 블럭이 지워질 수 있는 모양인지 판단
-        if(!CanDestroy(blocks[cur])) {
-            cout << cur << " : can't destroy" << '\n';
-            continue;
+    while(!blocks.empty()){
+        vector<int> destroyed;
+
+        for(auto& kv : missingPoses) {
+            if(CanDestroy(kv.second, board)) {
+                for(auto p : blocks[kv.first]) board[p.first][p.second] = 0;
+
+                destroyed.push_back(kv.first);
+            }
         }
 
-        cout << cur << " : can destroy" << '\n';
-        answer++;
-        for(auto next : graph[cur]){
-            indegree[next]--;
+        if(destroyed.empty()) break;
 
-            if(indegree[next] == 0) q.push(next);
+        for(auto key : destroyed) {
+            answer++;
+            blocks.erase(key);
+            missingPoses.erase(key);
         }
     }
 
